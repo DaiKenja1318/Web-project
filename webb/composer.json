@@ -1,5 +1,0 @@
-{
-    "require": {
-        "aiven/aiven-laravel": "^1.0"
-    }
-}

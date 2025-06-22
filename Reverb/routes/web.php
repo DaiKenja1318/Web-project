@@ -3,9 +3,9 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\StoryController;
 use App\Http\Controllers\CommentController;
-use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ProfileController; // <-- THÊM DÒNG NÀY
 
-// Route chính, không cần auth
+// Route chính sẽ trỏ đến StoryController
 Route::get('/', [StoryController::class, 'index'])->name('home');
 
 // Route để xem chi tiết story, không cần auth
@@ -21,7 +21,7 @@ Route::middleware('auth')->group(function () {
     // Route để đăng comment
     Route::post('/stories/{story}/comments', [CommentController::class, 'store'])->name('comments.store');
 
-    // Profile routes
+    // Profile routes (Bây giờ đã có thể tìm thấy ProfileController)
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
@@ -32,6 +32,7 @@ Route::middleware('auth')->group(function () {
 Route::get('/dashboard', function () {
     return redirect()->route('home');
 })->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/', [StoryController::class, 'index'])->name('home');
 
 require __DIR__.'/auth.php';
 
