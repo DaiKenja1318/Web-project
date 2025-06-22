@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\StoryController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Admin\DashboardController;
 
 // Route chính, không cần auth
 Route::get('/', [StoryController::class, 'index'])->name('home');
@@ -17,6 +18,7 @@ Route::get('/stories/create', [StoryController::class, 'create'])
 
 // Route để xem chi tiết story. Đặt route này XUỐNG DƯỚI.
 Route::get('/stories/{story}', [StoryController::class, 'show'])->name('stories.show');
+
 
 // --- KẾT THÚC SỬA LỖI ---
 
@@ -35,17 +37,23 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-
-// Các route xác thực mặc định
-Route::get('/dashboard', function () {
-    return redirect()->route('home');
-})->middleware(['auth', 'verified'])->name('dashboard');
-
-require __DIR__.'/auth.php';
-
 // Nhóm các route chỉ dành cho Admin
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/dashboard', function() {
-        return view('admin.dashboard');
-    })->name('dashboard');
+    // SỬA LẠI THÀNH DÒNG NÀY ĐỂ GỌI CONTROLLER
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+     // Route hiển thị form edit
+     Route::get('/stories/{story}/edit', [DashboardController::class, 'editStory'])->name('stories.edit');
+    
+     // Route xử lý việc update
+     Route::put('/stories/{story}', [DashboardController::class, 'updateStory'])->name('stories.update');
+
+    Route::delete('/stories/{story}', [DashboardController::class, 'destroyStory'])->name('stories.destroy');
 });
+
+// Các route xác thực mặc định
+Route::get('/home', function () {
+    return redirect()->route('home');
+})->middleware(['auth', 'verified'])->name('home');
+
+require __DIR__.'/auth.php';

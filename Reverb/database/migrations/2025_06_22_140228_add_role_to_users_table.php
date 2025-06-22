@@ -12,7 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            //
+            // THÊM DÒNG NÀY VÀO ĐỂ TẠO CỘT 'role'
+            $table->string('role')->default('user')->after('email');
         });
     }
 
@@ -22,7 +23,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            //
+            // THÊM DÒNG NÀY VÀO ĐỂ CÓ THỂ ROLLBACK
+            $table->dropColumn('role');
         });
     }
 };
