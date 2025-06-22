@@ -32,6 +32,7 @@ class StoryController extends Controller
      */
     public function store(Request $request)
     {
+        // ... code validate và lưu story ...
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'content' => 'required|string',
@@ -48,9 +49,10 @@ class StoryController extends Controller
 
         $story->load('user');
 
+        // Bây giờ Laravel đã biết StoryCreated là gì
         broadcast(new StoryCreated($story))->toOthers();
 
-        return redirect()->route('stories.index')->with('success', 'Story created successfully!');
+        return redirect()->route('home')->with('success', 'Story created successfully!');
     }
 
     /**

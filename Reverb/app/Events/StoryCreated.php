@@ -2,6 +2,7 @@
 
 namespace App\Events;
 
+use App\Models\Story; // Import model Story
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PresenceChannel;
@@ -9,18 +10,17 @@ use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
-use App\Models\Blog;
-class BlogCreatedEvent  implements ShouldBroadcastNow
+
+class StoryCreated implements ShouldBroadcast // Implement ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
-    public $blog;
+
     /**
      * Create a new event instance.
      */
-    public function __construct(Blog $blog)
+    public function __construct(public Story $story)
     {
-        $this->blog= $blog;
+        // Constructor đã nhận model Story
     }
 
     /**
@@ -30,33 +30,9 @@ class BlogCreatedEvent  implements ShouldBroadcastNow
      */
     public function broadcastOn(): array
     {
+        // Broadcast trên một kênh công khai tên là 'stories'
         return [
-            new Channel('blogs')
+            new Channel('stories'),
         ];
     }
-
-
-    public function broadcastAs(): string
-    {
-        return  'blog.created';
-    }
-    
-    public function broadcastWith()
-    {
-        return   
-        [
-            'id' => $this->blog->id,
-            
-            'title' => $this->blog->title,
-            
-            'content' => $this->blog->content,
-            'created_at' => $this->blog->created_at,
-             'user'=>[
-                'id'=> $this->blog->user->id,
-                'name'=> $this->blog->user->name,
-             ]   ,
-        ];
-    }
-
-    
 }

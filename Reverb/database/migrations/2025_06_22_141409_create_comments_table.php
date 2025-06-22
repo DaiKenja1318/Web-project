@@ -9,13 +9,17 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
-    {
-        Schema::create('comments', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
-        });
-    }
+    // database/migrations/xxxx_create_comments_table.php
+public function up(): void
+{
+    Schema::create('comments', function (Blueprint $table) {
+        $table->id();
+        $table->foreignId('story_id')->constrained()->onDelete('cascade'); // <-- Dòng này phải có
+        $table->foreignId('user_id')->constrained()->onDelete('cascade');
+        $table->text('content');
+        $table->timestamps();
+    });
+}
 
     /**
      * Reverse the migrations.

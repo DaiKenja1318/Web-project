@@ -10,12 +10,16 @@ return new class extends Migration
      * Run the migrations.
      */
     public function up(): void
-    {
-        Schema::create('stories', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
-        });
-    }
+{
+    Schema::create('stories', function (Blueprint $table) {
+        $table->id();
+        $table->foreignId('user_id')->constrained()->onDelete('cascade');
+        $table->string('title'); // <-- Đảm bảo dòng này tồn tại
+        $table->text('content');
+        $table->string('image')->nullable();
+        $table->timestamps();
+    });
+}
 
     /**
      * Reverse the migrations.
