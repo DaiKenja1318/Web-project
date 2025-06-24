@@ -16,7 +16,7 @@ class StoryController extends Controller
     {
         // Bây giờ Laravel mới biết 'Story' là App\Models\Story
         $stories = Story::with('user')->latest()->paginate(10);
-        return view('stories.index', compact('stories'));
+        return view('stories.index', ['stories' => $stories]);
     }
 
     /**
@@ -52,7 +52,8 @@ class StoryController extends Controller
         // Bây giờ Laravel đã biết StoryCreated là gì
         broadcast(new StoryCreated($story))->toOthers();
 
-        return redirect()->route('home')->with('success', 'Story created successfully!');
+        return redirect()->route('stories.show', $story)
+                 ->with('success', 'Story created successfully!');
     }
 
     /**

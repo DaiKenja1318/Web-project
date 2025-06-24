@@ -52,8 +52,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 });
 
 // Các route xác thực mặc định
-Route::get('/home', function () {
-    return redirect()->route('home');
-})->middleware(['auth', 'verified'])->name('home');
+//Route::get('/home', function () {
+    //return redirect()->route('home');
+//})->middleware(['auth', 'verified'])->name('home');
 
 require __DIR__.'/auth.php';
