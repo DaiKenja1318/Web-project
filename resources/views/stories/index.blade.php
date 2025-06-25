@@ -30,7 +30,7 @@
                                     </div>
                                     <a href="{{ route('stories.show', $story) }}">
                                         @if($story->image)
-                                            <img src="{{ asset('storage/' . $story->image) }}" alt="{{ $story->title }}" class="w-full h-auto object-cover rounded-lg mb-4">
+                                        <img src="{{ Storage::url($story->image) }}" alt="{{ $story->title }}" class="w-full h-auto object-cover rounded-lg mb-4">
                                         @endif
                                         <h3 class="text-2xl font-bold mb-2">{{ $story->title }}</h3>
                                     </a>
