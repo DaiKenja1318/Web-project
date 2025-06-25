@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Spatie\Image\Image;
 use Spatie\Image\Enums\Fit;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class StoryController extends Controller
 {
