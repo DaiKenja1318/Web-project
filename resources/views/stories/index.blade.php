@@ -18,6 +18,9 @@
                     @endauth
 
                     <div id="stories-list" class="space-y-6">
+                        {{-- ========================================================= --}}
+                        {{-- PHẦN 1: SỬA LOGIC HIỂN THỊ KHI TẢI TRANG (PHP/BLADE) --}}
+                        {{-- ========================================================= --}}
                         @forelse($stories as $story)
                             @if ($story->user)
                                 <div class="p-6 border-b border-gray-200" id="story-{{ $story->id }}">
@@ -26,25 +29,19 @@
                                         <div class="text-gray-500 text-sm ml-2">{{ $story->created_at->diffForHumans() }}</div>
                                     </div>
                                     <a href="{{ route('stories.show', $story) }}">
-                                        @if($story->image)
-                                            @php
-                                                $pathInfo = pathinfo($story->image);
-                                                $directory = $pathInfo['dirname'];
-                                                $filename = $pathInfo['basename'];
-
-                                                $largeUrl = Storage::url($story->image);
-                                                $mediumUrl = Storage::url($directory . '/medium_' . $filename);
-                                                $thumbUrl = Storage::url($directory . '/thumb_' . $filename);
-                                            @endphp
-                                            {{-- === BẮT ĐẦU SỬA Ở ĐÂY: THAY max-w-xl BẰNG max-w-2xl === --}}
-                                            <img src="{{ $mediumUrl }}"
-                                                 srcset="{{ $thumbUrl }} 400w, {{ $mediumUrl }} 800w, {{ $largeUrl }} 1200w"
-                                                 sizes="(max-width: 800px) 100vw, 800px"
+                                        {{-- Dùng file_type để quyết định hiển thị <img> hay <video> --}}
+                                        @if($story->file_type === 'image' && $story->image)
+                                            <img src="{{ asset('storage/' . $story->image) }}"
                                                  alt="{{ $story->title }}"
-                                                 class="max-w-2xl mx-auto h-auto object-cover rounded-lg mb-4" {{-- <-- ĐÃ SỬA --}}
+                                                 class="max-w-2xl mx-auto h-auto object-cover rounded-lg mb-4"
                                                  loading="lazy">
-                                            {{-- === KẾT THÚC SỬA Ở ĐÂY === --}}
+                                        @elseif($story->file_type === 'video' && $story->image)
+                                            <video controls class="max-w-2xl mx-auto h-auto rounded-lg mb-4">
+                                                <source src="{{ asset('storage/' . $story->image) }}" type="video/mp4">
+                                                Your browser does not support the video tag.
+                                            </video>
                                         @endif
+
                                         <h3 class="text-2xl font-bold mb-2">{{ $story->title }}</h3>
                                     </a>
                                     <p class="text-gray-700">{!! \Illuminate\Support\Str::limit(nl2br(e($story->content)), 200) !!}</p>
@@ -67,47 +64,77 @@
     </div>
 
     @push('scripts')
-    {{-- Phần Javascript giữ nguyên, không thay đổi --}}
+    {{-- ============================================================= --}}
+    {{-- PHẦN 2: SỬA LOGIC HIỂN THỊ KHI CÓ SỰ KIỆN REAL-TIME (JS) --}}
+    {{-- ============================================================= --}}
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            if (window.Echo) {
+            // Kiểm tra xem Echo đã được khởi tạo chưa
+            if (typeof window.Echo !== 'undefined') {
                 window.Echo.channel('stories')
                     .listen('StoryCreated', (e) => {
-                        // ...
+                        console.log('New story received:', e); // Dòng này để debug, có thể xóa sau
+
                         const storiesList = document.getElementById('stories-list');
                         if (!storiesList) return;
+
+                        // Xóa thông báo "No stories" nếu có
+                        const noStories = storiesList.querySelector('.text-center');
+                        if(noStories) {
+                            noStories.remove();
+                        }
                         
-                        let imageTag = '';
-                        if (e.imageUrlMedium) {
-                             // ÁP DỤNG THAY ĐỔI VÀO CẢ JAVASCRIPT
-                            imageTag = `
-                                <img src="${e.imageUrlMedium}"
-                                     srcset="${e.imageUrlThumb} 400w, ${e.imageUrlMedium} 800w, ${e.imageUrlLarge} 1200w"
-                                     sizes="(max-width: 800px) 100vw, 800px"
+                        // Tạo thẻ media (ảnh hoặc video) dựa trên 'fileType' từ event
+                        let mediaTag = '';
+                        if (e.fileType === 'image' && e.fileUrl) {
+                            mediaTag = `
+                                <img src="${e.fileUrl}"
                                      alt="${e.story.title}"
                                      class="max-w-2xl mx-auto h-auto object-cover rounded-lg mb-4"
                                      loading="lazy">
                             `;
+                        } else if (e.fileType === 'video' && e.fileUrl) {
+                            mediaTag = `
+                                <video controls class="max-w-2xl mx-auto h-auto rounded-lg mb-4">
+                                    <source src="${e.fileUrl}" type="video/mp4">
+                                    Your browser does not support the video tag.
+                                </video>
+                            `;
                         }
                         
-                        // ...
+                        // Giới hạn nội dung hiển thị
                         const content = e.story.content ? e.story.content.substring(0, 200) : '';
 
+                        // Tạo khối HTML cho story mới
                         const newStoryHtml = `
-                            <div class="p-6 border-b border-gray-200" id="story-${e.story.id}">
+                            <div class="p-6 border-b border-gray-200" id="story-${e.story.id}" style="opacity: 0; transform: translateY(-20px); transition: all 0.5s ease-out;">
                                 <div class="flex items-center mb-4">
                                     <div class="font-bold text-lg">${e.story.user.name}</div>
                                     <div class="text-gray-500 text-sm ml-2">Just now</div>
                                 </div>
-                                 <a href="/stories/${e.story.id}">
-                                    ${imageTag}
+                                <a href="/stories/${e.story.id}">
+                                    ${mediaTag}  <!-- Chèn thẻ media vào đây -->
                                     <h3 class="text-2xl font-bold mb-2">${e.story.title}</h3>
                                 </a>
                                 <p class="text-gray-700">${content}</p>
                             </div>
                         `;
+
+                        // Thêm story mới vào đầu danh sách
                         storiesList.insertAdjacentHTML('afterbegin', newStoryHtml);
+                        
+                        // Thêm hiệu ứng xuất hiện mượt mà
+                        const newStoryElement = document.getElementById(`story-${e.story.id}`);
+                        setTimeout(() => {
+                            if(newStoryElement) {
+                                newStoryElement.style.opacity = '1';
+                                newStoryElement.style.transform = 'translateY(0)';
+                            }
+                        }, 50);
+
                     });
+            } else {
+                console.warn('Laravel Echo not configured.');
             }
         });
     </script>
