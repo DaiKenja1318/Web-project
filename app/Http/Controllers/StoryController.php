@@ -50,10 +50,11 @@ class StoryController extends Controller
 
         // 3. Tạo story mới trong database
         // Với $fillable đã đúng trong Model, Laravel sẽ lưu tất cả các trường
-        $story = auth()->user()->stories()->create([
+        Story::create([
             'title' => $validated['title'],
             'content' => $validated['content'],
-            'image' => $imagePath, // Lưu đường dẫn ảnh (hoặc null nếu không có ảnh)
+            'image' => $imagePath, // Giá trị này sẽ là null hoặc đường dẫn file
+            'user_id' => auth()->id(), // Giả sử bạn muốn lưu cả ID của người tạo
         ]);
 
         // 4. Phát sóng sự kiện real-time (nếu có)
