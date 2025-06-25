@@ -11,31 +11,28 @@
                 <div class="p-6 text-gray-900">
                     <!-- Story Content -->
                     
-                    {{-- BẮT ĐẦU PHẦN SỬA LẠI HÌNH ẢNH --}}
                     @if($story->image)
                         @php
-                            // Tách đường dẫn để tạo tên file cho các phiên bản khác
                             $pathInfo = pathinfo($story->image);
                             $directory = $pathInfo['dirname'];
                             $filename = $pathInfo['basename'];
 
-                            // Tạo URL đầy đủ cho từng phiên bản ảnh
                             $largeUrl = Storage::url($story->image);
                             $mediumUrl = Storage::url($directory . '/medium_' . $filename);
                             $thumbUrl = Storage::url($directory . '/thumb_' . $filename);
                         @endphp
 
-                        {{-- Sử dụng srcset để trình duyệt tự chọn ảnh phù hợp nhất --}}
-                        <img src="{{ $mediumUrl }}" {{-- Ảnh mặc định cho trình duyệt cũ --}}
+                        {{-- === BẮT ĐẦU SỬA Ở ĐÂY: THAY max-w-xl BẰNG max-w-2xl === --}}
+                        <img src="{{ $mediumUrl }}"
                              srcset="{{ $thumbUrl }} 400w, 
                                      {{ $mediumUrl }} 800w, 
                                      {{ $largeUrl }} 1200w"
-                             sizes="(max-width: 800px) 100vw, 800px" {{-- Hướng dẫn trình duyệt chọn size nào --}}
+                             sizes="(max-width: 800px) 100vw, 800px"
                              alt="{{ $story->title }}"
-                             class="max-w-xl mx-auto h-auto object-cover rounded-lg mb-4"
-                             loading="lazy"> {{-- Thêm lazy loading để tăng tốc tải trang --}}
+                             class="max-w-2xl mx-auto h-auto object-cover rounded-lg mb-4" {{-- <-- ĐÃ SỬA --}}
+                             loading="lazy">
+                        {{-- === KẾT THÚC SỬA Ở ĐÂY === --}}
                     @endif
-                    {{-- KẾT THÚC PHẦN SỬA LẠI HÌNH ẢNH --}}
                     
                     <div class="flex items-center mb-4">
                         <div class="font-bold text-lg">{{ $story->user->name }}</div>
@@ -63,7 +60,7 @@
 
                     <!-- Comments List -->
                     <div id="comments-list" class="space-y-4">
-                        @forelse ($story->comments->sortByDesc('created_at') as $comment) {{-- Sắp xếp comment mới nhất lên đầu --}}
+                        @forelse ($story->comments->sortByDesc('created_at') as $comment)
                             <div class="flex space-x-3" id="comment-{{$comment->id}}">
                                 <div class="flex-shrink-0">
                                     <div class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center font-bold text-gray-600">
@@ -87,8 +84,8 @@
         </div>
     </div>
 
-    {{-- Phần Javascript không thay đổi --}}
     @push('scripts')
+    {{-- Phần Javascript giữ nguyên, không thay đổi --}}
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             if (window.Echo) {

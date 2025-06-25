@@ -26,7 +26,6 @@
                                         <div class="text-gray-500 text-sm ml-2">{{ $story->created_at->diffForHumans() }}</div>
                                     </div>
                                     <a href="{{ route('stories.show', $story) }}">
-                                        {{-- ÁP DỤNG SRCSET Ở ĐÂY --}}
                                         @if($story->image)
                                             @php
                                                 $pathInfo = pathinfo($story->image);
@@ -37,12 +36,14 @@
                                                 $mediumUrl = Storage::url($directory . '/medium_' . $filename);
                                                 $thumbUrl = Storage::url($directory . '/thumb_' . $filename);
                                             @endphp
+                                            {{-- === BẮT ĐẦU SỬA Ở ĐÂY: THAY max-w-xl BẰNG max-w-2xl === --}}
                                             <img src="{{ $mediumUrl }}"
                                                  srcset="{{ $thumbUrl }} 400w, {{ $mediumUrl }} 800w, {{ $largeUrl }} 1200w"
                                                  sizes="(max-width: 800px) 100vw, 800px"
                                                  alt="{{ $story->title }}"
-                                                 class="max-w-xl mx-auto h-auto object-cover rounded-lg mb-4"
-                                                 loading="lazy"> {{-- Thêm lazy loading để tăng tốc --}}
+                                                 class="max-w-2xl mx-auto h-auto object-cover rounded-lg mb-4" {{-- <-- ĐÃ SỬA --}}
+                                                 loading="lazy">
+                                            {{-- === KẾT THÚC SỬA Ở ĐÂY === --}}
                                         @endif
                                         <h3 class="text-2xl font-bold mb-2">{{ $story->title }}</h3>
                                     </a>
@@ -66,29 +67,30 @@
     </div>
 
     @push('scripts')
+    {{-- Phần Javascript giữ nguyên, không thay đổi --}}
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             if (window.Echo) {
                 window.Echo.channel('stories')
                     .listen('StoryCreated', (e) => {
-                        // ... (kiểm tra e như cũ) ...
-
+                        // ...
                         const storiesList = document.getElementById('stories-list');
                         if (!storiesList) return;
                         
-                        // SỬA LẠI PHẦN TẠO ẢNH TRONG JAVASCRIPT
                         let imageTag = '';
-                        if (e.imageUrlMedium) { // Kiểm tra URL từ event
+                        if (e.imageUrlMedium) {
+                             // ÁP DỤNG THAY ĐỔI VÀO CẢ JAVASCRIPT
                             imageTag = `
                                 <img src="${e.imageUrlMedium}"
                                      srcset="${e.imageUrlThumb} 400w, ${e.imageUrlMedium} 800w, ${e.imageUrlLarge} 1200w"
                                      sizes="(max-width: 800px) 100vw, 800px"
                                      alt="${e.story.title}"
-                                     class="max-w-xl mx-auto h-auto object-cover rounded-lg mb-4"
+                                     class="max-w-2xl mx-auto h-auto object-cover rounded-lg mb-4"
                                      loading="lazy">
                             `;
                         }
                         
+                        // ...
                         const content = e.story.content ? e.story.content.substring(0, 200) : '';
 
                         const newStoryHtml = `
