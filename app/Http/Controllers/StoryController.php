@@ -44,27 +44,30 @@ class StoryController extends Controller
         $imagePath = null;
         if ($request->hasFile('image')) {
             $file = $request->file('image');
-            $imagePath = $file->store('stories', 's3');
+            
+            // Lấy đường dẫn đến file tạm thời mà Laravel đã lưu
             $tempPath = $file->getRealPath();
-        
-            // Lấy định dạng từ file gốc (ví dụ 'jpg', 'png')
+
+            // Lấy định dạng từ file gốc
             $format = $file->getClientOriginalExtension();
-        
-            // Tải ảnh tạm thời lên S3 với định dạng được chỉ định rõ ràng
-            $imageLarge = Image::load($tempPath)->width(1200)->quality(85)->optimize();
-            Storage::disk('s3')->put($imagePath, (string) $imageLarge->save(null, 85, $format));
-        
+
+            // 1. Tải ảnh gốc và tạo đường dẫn trên S3
+            $imagePath = $file->store('stories', 's3');
+            
+            // 2. Xử lý và upload các phiên bản khác
             $pathInfo = pathinfo($imagePath);
             $directory = $pathInfo['dirname'];
             $filename = $pathInfo['basename'];
-            
+
+            // Phiên bản vừa (medium)
             $pathMedium = $directory . '/medium_' . $filename;
             $imageMedium = Image::load($tempPath)->width(800)->quality(85)->optimize();
-            Storage::disk('s3')->put($pathMedium, (string) $imageMedium->save(null, 85, $format));
-        
+            Storage::disk('s3')->put($pathMedium, $imageMedium->encodeByExtension($format));
+
+            // Phiên bản nhỏ (thumbnail)
             $pathThumb = $directory . '/thumb_' . $filename;
             $imageThumb = Image::load($tempPath)->width(400)->quality(85)->optimize();
-            Storage::disk('s3')->put($pathThumb, (string) $imageThumb->save(null, 85, $format));
+            Storage::disk('s3')->put($pathThumb, $imageThumb->encodeByExtension($format));
         }
 
         $story = auth()->user()->stories()->create([
