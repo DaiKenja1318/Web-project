@@ -43,33 +43,28 @@ class StoryController extends Controller
 
         $imagePath = null;
         if ($request->hasFile('image')) {
-            // Lấy file ảnh gốc
             $file = $request->file('image');
-
-            // Tạo đường dẫn trên S3
             $imagePath = $file->store('stories', 's3');
-
-            // Đọc file tạm thời để xử lý
             $tempPath = $file->getRealPath();
-
-            // Tải ảnh tạm thời lên S3 với các kích thước khác nhau
-            // Phiên bản lớn (ghi đè file gốc)
+        
+            // Lấy định dạng từ file gốc (ví dụ 'jpg', 'png')
+            $format = $file->getClientOriginalExtension();
+        
+            // Tải ảnh tạm thời lên S3 với định dạng được chỉ định rõ ràng
             $imageLarge = Image::load($tempPath)->width(1200)->quality(85)->optimize();
-            Storage::disk('s3')->put($imagePath, (string) $imageLarge->save());
-
-            // Tạo tên file cho các phiên bản khác
+            Storage::disk('s3')->put($imagePath, (string) $imageLarge->save(null, 85, $format));
+        
             $pathInfo = pathinfo($imagePath);
             $directory = $pathInfo['dirname'];
             $filename = $pathInfo['basename'];
             
-            // Phiên bản vừa
             $pathMedium = $directory . '/medium_' . $filename;
             $imageMedium = Image::load($tempPath)->width(800)->quality(85)->optimize();
-            Storage::disk('s3')->put($pathMedium, (string) $imageMedium->save());
-            // Phiên bản thumbnail
+            Storage::disk('s3')->put($pathMedium, (string) $imageMedium->save(null, 85, $format));
+        
             $pathThumb = $directory . '/thumb_' . $filename;
             $imageThumb = Image::load($tempPath)->width(400)->quality(85)->optimize();
-            Storage_disk('s3')->put($pathThumb, (string) $imageThumb->save());
+            Storage::disk('s3')->put($pathThumb, (string) $imageThumb->save(null, 85, $format));
         }
 
         $story = auth()->user()->stories()->create([
