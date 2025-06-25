@@ -11,7 +11,7 @@
                 <div class="p-6 text-gray-900">
                     <!-- Story Content -->
                     @if($story->image)
-                        <img src="{{ asset('storage/' . $story->image) }}" alt="{{ $story->title }}" class="w-full h-auto object-cover rounded-lg mb-4">
+                    <img src="{{ Storage::url($story->image) }}" alt="{{ $story->title }}" class="w-full h-auto object-cover rounded-lg mb-4">
                     @endif
                     <div class="flex items-center mb-4">
                         <div class="font-bold text-lg">{{ $story->user->name }}</div>
