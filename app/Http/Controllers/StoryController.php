@@ -44,47 +44,57 @@ class StoryController extends Controller
     ]);
 
     $imagePath = null;
-    $tempFilePath = null; // Khởi tạo biến file tạm
 
     // 2. Kiểm tra và xử lý nếu có file ảnh được upload
     if ($request->hasFile('image')) {
-        $file = $request->file('image');
-        $extension = $file->getClientOriginalExtension();
-
-        // TẠO FILE TẠM VỚI PHẦN MỞ RỘNG ĐÚNG
-        // Đây là bước sửa lỗi quan trọng nhất
-        $tempFilePath = tempnam(sys_get_temp_dir(), 'img_') . '.' . $extension;
-        
-        // Tạo tên file ngẫu nhiên và thư mục lưu trên S3
-        $directory = 'stories';
-        $filename = Str::random(40) . '.' . $extension;
-        $imagePath = $directory . '/' . $filename; // Đường dẫn ảnh gốc/lớn
-
         try {
-            // --- Xử lý phiên bản LỚN (gốc) ---
-            Image::load($file->getRealPath())
-                ->width(1200)
-                ->quality(85)
-                ->optimize()
-                ->save($tempFilePath); // Lưu vào file tạm có phần mở rộng
-            // Upload file tạm lên S3
-            Storage::disk('s3')->put($imagePath, fopen($tempFilePath, 'r+'));
+            $file = $request->file('image');
+            $extension = strtolower($file->getClientOriginalExtension());
+            $tempPath = $file->getRealPath();
 
-            // --- Xử lý phiên bản VỪA (medium) ---
-            $pathMedium = $directory . '/medium_' . $filename;
-            Image::load($file->getRealPath())->width(800)->quality(85)->optimize()->save($tempFilePath);
-            Storage::disk('s3')->put($pathMedium, fopen($tempFilePath, 'r+'));
-
-            // --- Xử lý phiên bản NHỎ (thumb) ---
-            $pathThumb = $directory . '/thumb_' . $filename;
-            Image::load($file->getRealPath())->width(400)->quality(85)->optimize()->save($tempFilePath);
-            Storage::disk('s3')->put($pathThumb, fopen($tempFilePath, 'r+'));
-
-        } finally {
-            // Đảm bảo file tạm luôn được xóa đi
-            if ($tempFilePath && file_exists($tempFilePath)) {
-                unlink($tempFilePath);
+            // Chỉ cho phép các định dạng ảnh phổ biến
+            $supportedFormats = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+            if (!in_array($extension, $supportedFormats)) {
+                // Nếu định dạng không được hỗ trợ, bỏ qua việc xử lý ảnh
+                // hoặc bạn có thể trả về lỗi validation ở đây
+                throw new \Exception('Invalid image format uploaded.');
             }
+            
+            // Tạo tên file ngẫu nhiên và thư mục lưu trên S3
+            $directory = 'stories';
+            $filename = Str::random(40) . '.' . $extension;
+            $imagePath = $directory . '/' . $filename; // Đường dẫn ảnh gốc/lớn
+
+            // --- Xử lý các phiên bản ảnh ---
+
+            // Hàm trợ giúp để xử lý và upload một phiên bản
+            $processAndUpload = function($width, $path) use ($tempPath, $extension) {
+                $image = Image::load($tempPath)
+                    ->width($width)
+                    ->quality(85)
+                    ->optimize();
+
+                // Dùng match để gọi đúng hàm encode tường minh
+                $encodedImage = match ($extension) {
+                    'jpg', 'jpeg' => $image->toJpg(),
+                    'png' => $image->toPng(),
+                    'gif' => $image->toGif(),
+                    'webp' => $image->toWebp(),
+                };
+                
+                Storage::disk('s3')->put($path, (string) $encodedImage);
+            };
+
+            // Sử dụng hàm trợ giúp để tạo các phiên bản
+            $processAndUpload(1200, $imagePath); // Phiên bản lớn
+            $processAndUpload(800, $directory . '/medium_' . $filename); // Phiên bản vừa
+            $processAndUpload(400, $directory . '/thumb_' . $filename); // Phiên bản nhỏ
+
+        } catch (\Exception $e) {
+            // Ghi lại lỗi chi tiết để gỡ rối mà không làm sập ứng dụng
+            Log::error('Image processing failed: ' . $e->getMessage());
+            // Đặt $imagePath về null để không lưu đường dẫn lỗi vào DB
+            $imagePath = null;
         }
     }
 
