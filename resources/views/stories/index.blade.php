@@ -27,10 +27,23 @@
                                     </div>
                                     <a href="{{ route('stories.show', $story) }}">
                                         @if($story->image)
-                                            <img src="{{ Storage::url($story->image) }}" 
+                                            @php
+                                                $pathInfo = pathinfo($story->image);
+                                                $directory = $pathInfo['dirname'];
+                                                $filename = $pathInfo['basename'];
+
+                                                $largeUrl = Storage::url($story->image);
+                                                $mediumUrl = Storage::url($directory . '/medium_' . $filename);
+                                                $thumbUrl = Storage::url($directory . '/thumb_' . $filename);
+                                            @endphp
+                                            {{-- === BẮT ĐẦU SỬA Ở ĐÂY: THAY max-w-xl BẰNG max-w-2xl === --}}
+                                            <img src="{{ $mediumUrl }}"
+                                                 srcset="{{ $thumbUrl }} 400w, {{ $mediumUrl }} 800w, {{ $largeUrl }} 1200w"
+                                                 sizes="(max-width: 800px) 100vw, 800px"
                                                  alt="{{ $story->title }}"
-                                                 class="max-w-2xl mx-auto h-auto object-cover rounded-lg mb-4"
+                                                 class="max-w-2xl mx-auto h-auto object-cover rounded-lg mb-4" {{-- <-- ĐÃ SỬA --}}
                                                  loading="lazy">
+                                            {{-- === KẾT THÚC SỬA Ở ĐÂY === --}}
                                         @endif
                                         <h3 class="text-2xl font-bold mb-2">{{ $story->title }}</h3>
                                     </a>
@@ -52,7 +65,7 @@
             </div>
         </div>
     </div>
-    
+
     @push('scripts')
     {{-- Phần Javascript giữ nguyên, không thay đổi --}}
     <script>
