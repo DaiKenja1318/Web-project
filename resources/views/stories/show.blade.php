@@ -9,32 +9,36 @@
         <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
-                    <!-- ========================================================= -->
-                    <!--     PHẦN SỬA LOGIC HIỂN THỊ ẢNH/VIDEO BẮT ĐẦU TỪ ĐÂY      -->
-                    <!-- ========================================================= -->
+                    <!-- Story Content -->
                     
-                    {{-- Dùng file_type để quyết định hiển thị <img> hay <video> --}}
-                    @if($story->file_type === 'image' && $story->image)
-                        <img src="{{ asset('storage/' . $story->image) }}"
+                    @if($story->image)
+                        @php
+                            $pathInfo = pathinfo($story->image);
+                            $directory = $pathInfo['dirname'];
+                            $filename = $pathInfo['basename'];
+
+                            $largeUrl = Storage::url($story->image);
+                            $mediumUrl = Storage::url($directory . '/medium_' . $filename);
+                            $thumbUrl = Storage::url($directory . '/thumb_' . $filename);
+                        @endphp
+
+                        {{-- === BẮT ĐẦU SỬA Ở ĐÂY: THAY max-w-xl BẰNG max-w-2xl === --}}
+                        <img src="{{ $mediumUrl }}"
+                             srcset="{{ $thumbUrl }} 400w, 
+                                     {{ $mediumUrl }} 800w, 
+                                     {{ $largeUrl }} 1200w"
+                             sizes="(max-width: 800px) 100vw, 800px"
                              alt="{{ $story->title }}"
-                             class="max-w-full h-auto object-cover rounded-lg mb-4"
+                             class="max-w-2xl mx-auto h-auto object-cover rounded-lg mb-4" {{-- <-- ĐÃ SỬA --}}
                              loading="lazy">
-                    @elseif($story->file_type === 'video' && $story->image)
-                        <video controls class="max-w-full h-auto rounded-lg mb-4">
-                            <source src="{{ asset('storage/' . $story->image) }}" type="video/mp4">
-                            Your browser does not support the video tag.
-                        </video>
+                        {{-- === KẾT THÚC SỬA Ở ĐÂY === --}}
                     @endif
-                    
-                    {{-- ========================================================= -->
-                    <!--                 PHẦN SỬA LOGIC KẾT THÚC Ở ĐÂY              -->
-                    <!-- ========================================================= -->
                     
                     <div class="flex items-center mb-4">
                         <div class="font-bold text-lg">{{ $story->user->name }}</div>
                         <div class="text-gray-500 text-sm ml-2">{{ $story->created_at->format('M d, Y') }}</div>
                     </div>
-                    <p class="text-gray-800 text-lg leading-relaxed whitespace-pre-wrap">{{ $story->content }}</p>
+                    <p class="text-gray-800 text-lg leading-relaxed">{{ $story->content }}</p>
 
                     <hr class="my-6">
 
@@ -81,7 +85,7 @@
     </div>
 
     @push('scripts')
-    {{-- Phần Javascript cho comments không cần thay đổi --}}
+    {{-- Phần Javascript giữ nguyên, không thay đổi --}}
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             if (window.Echo) {

@@ -37,44 +37,29 @@ class StoryController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'content' => 'required|string',
-            // --- THAY ĐỔI QUAN TRỌNG Ở ĐÂY ---
-            // 'file' thay vì 'image' để chung chung hơn
-            // mimes: định dạng file cho phép (thêm các định dạng video phổ biến)
-            // max: tăng giới hạn kích thước file cho video (ví dụ 50MB)
-            'file' => 'nullable|file|mimes:jpg,jpeg,png,gif,mp4,mov,ogg,qt|max:51200', // 51200 KB = 50 MB
+            'image' => 'nullable|image|max:2048', // Cho phép ảnh, tối đa 2MB
         ]);
 
-        $filePath = null; // Đường dẫn file
-        $fileType = 'none'; // Loại file: image, video, hoặc none
+        $imagePath = null; // Mặc định là không có ảnh
 
-        // 2. Kiểm tra và xử lý file upload
-        if ($request->hasFile('file')) {
-            $file = $request->file('file');
-            
-            // Lấy loại MIME của file để xác định là ảnh hay video
-            $mimeType = $file->getMimeType();
+        // 2. Kiểm tra và upload file ảnh nếu người dùng có chọn
+        if ($request->hasFile('image')) {
+            $imagePath = $request->file('image')->store('stories', 'public');
 
-            if (str_starts_with($mimeType, 'image/')) {
-                $fileType = 'image';
-                $filePath = $file->store('stories/images', 'public'); // Lưu ảnh vào thư mục riêng
-            } elseif (str_starts_with($mimeType, 'video/')) {
-                $fileType = 'video';
-                $filePath = $file->store('stories/videos', 'public'); // Lưu video vào thư mục riêng
-            }
         }
 
         // 3. Tạo story mới trong database
+        // Với $fillable đã đúng trong Model, Laravel sẽ lưu tất cả các trường
         $story = auth()->user()->stories()->create([
             'title' => $validated['title'],
             'content' => $validated['content'],
-            'image' => $filePath, // Ta vẫn dùng cột 'image' để lưu đường dẫn chung
-            'file_type' => $fileType, // Thêm một cột mới để biết đây là loại file gì
+            'image' => $imagePath, // Lưu đường dẫn ảnh (hoặc null nếu không có ảnh)
         ]);
 
-        // 4. Phát sóng sự kiện real-time
+        // 4. Phát sóng sự kiện real-time (nếu có)
         broadcast(new StoryCreated($story))->toOthers();
 
-        // 5. Chuyển hướng
+        // 5. Chuyển hướng người dùng về trang chi tiết story vừa tạo
         return redirect()->route('stories.show', $story)
                          ->with('success', 'Story created successfully!');
     }
@@ -84,6 +69,7 @@ class StoryController extends Controller
      */
     public function show(Story $story)
     {
+        // Tải sẵn các mối quan hệ để tránh lỗi N+1
         $story->load(['user', 'comments.user']);
         return view('stories.show', compact('story'));
     }
