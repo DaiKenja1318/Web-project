@@ -32,28 +32,54 @@ class StoryController extends Controller
      */
     public function store(Request $request)
     {
-        // ... code validate và lưu story ...
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'content' => 'required|string',
-            'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ]);
 
-        $imagePath = $request->file('image')->store('stories', 'public');
+        $imagePath = null;
+        if ($request->hasFile('image')) {
+            // Lấy file ảnh gốc
+            $file = $request->file('image');
 
-        $story = $request->user()->stories()->create([
+            // Tạo đường dẫn trên S3
+            $imagePath = $file->store('stories', 's3');
+
+            // Đọc file tạm thời để xử lý
+            $tempPath = $file->getRealPath();
+
+            // Tải ảnh tạm thời lên S3 với các kích thước khác nhau
+            // Phiên bản lớn (ghi đè file gốc)
+            $imageLarge = Image::load($tempPath)->width(1200)->quality(85)->optimize();
+            Storage::disk('s3')->put($imagePath, $imageLarge->encode());
+
+            // Tạo tên file cho các phiên bản khác
+            $pathInfo = pathinfo($imagePath);
+            $directory = $pathInfo['dirname'];
+            $filename = $pathInfo['basename'];
+            
+            // Phiên bản vừa
+            $pathMedium = $directory . '/medium_' . $filename;
+            $imageMedium = Image::load($tempPath)->width(800)->quality(85)->optimize();
+            Storage::disk('s3')->put($pathMedium, $imageMedium->encode());
+
+            // Phiên bản thumbnail
+            $pathThumb = $directory . '/thumb_' . $filename;
+            $imageThumb = Image::load($tempPath)->width(400)->quality(85)->optimize();
+            Storage::disk('s3')->put($pathThumb, $imageThumb->encode());
+        }
+
+        $story = auth()->user()->stories()->create([
             'title' => $validated['title'],
             'content' => $validated['content'],
             'image' => $imagePath,
         ]);
 
-        $story->load('user');
-
-        // Bây giờ Laravel đã biết StoryCreated là gì
         broadcast(new StoryCreated($story))->toOthers();
 
         return redirect()->route('stories.show', $story)
-                 ->with('success', 'Story created successfully!');
+                         ->with('success', 'Story created successfully!');
     }
 
     /**
@@ -64,4 +90,5 @@ class StoryController extends Controller
         $story->load(['user', 'comments.user']);
         return view('stories.show', compact('story'));
     }
+    
 }
