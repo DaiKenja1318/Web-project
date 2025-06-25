@@ -43,38 +43,33 @@ class StoryController extends Controller
         ]);
 
         $imagePath = null;
-if ($request->hasFile('image')) {
-    $file = $request->file('image');
-    
-    // 1. Chỉ định thư mục và tạo một tên file ngẫu nhiên, duy nhất
-    $directory = 'stories';
-    $filename = Str::random(40) . '.' . $file->getClientOriginalExtension();
-    
-    // Tạo đường dẫn đầy đủ cho ảnh gốc
-    $imagePath = $directory . '/' . $filename;
-
-    // Lấy đường dẫn file tạm thời trên server để xử lý
-    $tempPath = $file->getRealPath();
-
-    // Lấy định dạng ảnh
-    $format = $file->getClientOriginalExtension();
-
-    // 2. Xử lý và upload các phiên bản
-    
-    // Upload ảnh gốc (phiên bản lớn)
-    $imageLarge = Image::load($tempPath)->width(1200)->quality(85)->optimize();
-    Storage::disk('s3')->put($imagePath, $imageLarge->encodeByExtension($format));
-
-    // Tạo đường dẫn và upload phiên bản vừa (medium)
-    $pathMedium = $directory . '/medium_' . $filename;
-    $imageMedium = Image::load($tempPath)->width(800)->quality(85)->optimize();
-    Storage::disk('s3')->put($pathMedium, $imageMedium->encodeByExtension($format));
-
-    // Tạo đường dẫn và upload phiên bản nhỏ (thumbnail)
-    $pathThumb = $directory . '/thumb_' . $filename;
-    $imageThumb = Image::load($tempPath)->width(400)->quality(85)->optimize();
-    Storage::disk('s3')->put($pathThumb, $imageThumb->encodeByExtension($format));
-}
+        $imagePath = null;
+        if ($request->hasFile('image')) {
+            $file = $request->file('image');
+            $tempPath = $file->getRealPath();
+            $format = $file->getClientOriginalExtension();
+        
+            // 1. Tạo tên file ngẫu nhiên và đường dẫn đầy đủ cho ảnh gốc
+            $directory = 'stories';
+            $filename = Str::random(40) . '.' . $format;
+            $imagePath = $directory . '/' . $filename;
+            
+            // 2. Xử lý và upload các phiên bản
+            
+            // Phiên bản lớn (gốc)
+            $imageLarge = Image::load($tempPath)->width(1200)->quality(85)->optimize();
+            Storage::disk('s3')->put($imagePath, $imageLarge->format($format)->stream());
+        
+            // Phiên bản vừa (medium)
+            $pathMedium = $directory . '/medium_' . $filename;
+            $imageMedium = Image::load($tempPath)->width(800)->quality(85)->optimize();
+            Storage::disk('s3')->put($pathMedium, $imageMedium->format($format)->stream());
+        
+            // Phiên bản nhỏ (thumbnail)
+            $pathThumb = $directory . '/thumb_' . $filename;
+            $imageThumb = Image::load($tempPath)->width(400)->quality(85)->optimize();
+            Storage::disk('s3')->put($pathThumb, $imageThumb->format($format)->stream());
+        }
 
         $story = auth()->user()->stories()->create([
             'title' => $validated['title'],
