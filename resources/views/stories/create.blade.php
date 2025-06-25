@@ -1,51 +1,41 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Create a New Story') }}
+            {{ __('Create New Story') }}
         </h2>
     </x-slot>
 
     <div class="py-12">
-        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
+                    {{-- Form để tạo story --}}
                     <form method="POST" action="{{ route('stories.store') }}" enctype="multipart/form-data">
                         @csrf
 
                         <!-- Title -->
-                        <div class="mb-4">
-                            <label for="title" class="block text-gray-700 text-sm font-bold mb-2">Title:</label>
-                            <input type="text" name="title" id="title" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" value="{{ old('title') }}" required>
-                            @error('title')
-                                <p class="text-red-500 text-xs mt-2">{{ $message }}</p>
-                            @enderror
+                        <div>
+                            <x-input-label for="title" :value="__('Title')" />
+                            <x-text-input id="title" class="block mt-1 w-full" type="text" name="title" :value="old('title')" required autofocus autocomplete="off" />
+                            <x-input-error :messages="$errors->get('title')" class="mt-2" />
                         </div>
 
                         <!-- Content -->
-                        <div class="mb-4">
-                            <label for="content" class="block text-gray-700 text-sm font-bold mb-2">Content:</label>
-                            <textarea name="content" id="content" rows="10" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>{{ old('content') }}</textarea>
-                            @error('content')
-                                <p class="text-red-500 text-xs mt-2">{{ $message }}</p>
-                            @enderror
+                        <div class="mt-4">
+                            <x-input-label for="content" :value="__('Content')" />
+                            <textarea id="content" name="content" class="block mt-1 w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" rows="6" required>{{ old('content') }}</textarea>
+                            <x-input-error :messages="$errors->get('content')" class="mt-2" />
                         </div>
 
-                        <!-- File (Image or Video) -->
-                        <div class="mb-6">
-                            <label for="file" class="block text-gray-700 text-sm font-bold mb-2">Image or Video (Optional):</label>
-                            {{-- ======================================================= --}}
-                            {{--      XÓA THUỘC TÍNH 'required' Ở DÒNG DƯỚI ĐÂY       --}}
-                            {{-- ======================================================= --}}
-                            <input type="file" name="file" id="file" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-                                   accept="image/*,video/*">
-                            <p class="text-gray-600 text-xs mt-1">Allowed: JPG, PNG, GIF, MP4, MOV. Max size: 50MB.</p>
-                            @error('file')
-                                <p class="text-red-500 text-xs mt-2">{{ $message }}</p>
-                            @enderror
+                         <!-- Image -->
+                        <div class="mt-4">
+                            <x-input-label for="image" :value="__('Image')" />
+                            <input id="image" class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none" type="file" name="image" required>
+                            <p class="mt-1 text-sm text-gray-500" id="file_input_help">PNG, JPG, GIF (MAX. 2MB).</p>
+                            <x-input-error :messages="$errors->get('image')" class="mt-2" />
                         </div>
 
-                        <!-- Submit Button -->
-                        <div class="flex items-center justify-end">
+                        <div class="flex items-center justify-end mt-6">
                             <x-primary-button>
                                 {{ __('Publish Story') }}
                             </x-primary-button>
