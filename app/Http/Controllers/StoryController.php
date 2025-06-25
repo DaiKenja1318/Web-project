@@ -55,7 +55,7 @@ class StoryController extends Controller
             // Tải ảnh tạm thời lên S3 với các kích thước khác nhau
             // Phiên bản lớn (ghi đè file gốc)
             $imageLarge = Image::load($tempPath)->width(1200)->quality(85)->optimize();
-            Storage::disk('s3')->put($imagePath, $imageLarge->stream());
+            Storage::disk('s3')->put($imagePath, (string) $imageLarge->save());
 
             // Tạo tên file cho các phiên bản khác
             $pathInfo = pathinfo($imagePath);
@@ -65,11 +65,11 @@ class StoryController extends Controller
             // Phiên bản vừa
             $pathMedium = $directory . '/medium_' . $filename;
             $imageMedium = Image::load($tempPath)->width(800)->quality(85)->optimize();
-            Storage::disk('s3')->put($pathMedium, $imageMedium->stream());
+            Storage::disk('s3')->put($pathMedium, (string) $imageMedium->save());
             // Phiên bản thumbnail
             $pathThumb = $directory . '/thumb_' . $filename;
             $imageThumb = Image::load($tempPath)->width(400)->quality(85)->optimize();
-            Storage::disk('s3')->put($pathThumb, $imageThumb->stream());
+            Storage_disk('s3')->put($pathThumb, (string) $imageThumb->save());
         }
 
         $story = auth()->user()->stories()->create([
