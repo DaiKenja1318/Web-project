@@ -30,7 +30,7 @@
                          <!-- Image -->
                         <div class="mt-4">
                             <x-input-label for="image" :value="__('Image')" />
-                            <input id="image" class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none" type="file" name="image" required>
+                            <input id="image" class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none" type="file" name="image">
                             <p class="mt-1 text-sm text-gray-500" id="file_input_help">PNG, JPG, GIF (MAX. 2MB).</p>
                             <x-input-error :messages="$errors->get('image')" class="mt-2" />
                         </div>
