@@ -2,20 +2,22 @@
 
 namespace App\Http\Controllers;
 
-// Các use statement cần thiết
 use App\Models\Story;
 use App\Events\StoryCreated;
+use App\Events\StoryUpdatedEvent;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage; // Quan trọng cho việc lấy URL
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Gate;
 
 class StoryController extends Controller
 {
     /**
-     * Hiển thị danh sách các story (trang chủ).
+     * Hiển thị danh sách các story.
      */
     public function index()
     {
-        $stories = Story::with('user')->latest()->paginate(10);
+        // Chỉ hiển thị các story đã 'published' cho người dùng thông thường
+        $stories = Story::where('status', 'published')->with('user')->latest()->paginate(10);
         return view('stories.index', ['stories' => $stories]);
     }
 
@@ -24,53 +26,128 @@ class StoryController extends Controller
      */
     public function create()
     {
-        return view('stories.create');
+        // Truyền một đối tượng Story rỗng để tái sử dụng form
+        return view('stories.edit', ['story' => new Story()]);
     }
 
     /**
-     * === HÀM STORE ĐÃ ĐƯỢC SỬA LẠI ĐỂ ĐẢM BẢO HOẠT ĐỘNG ===
-     * Logic được đơn giản hóa tối đa, chỉ dùng hàm store() của Laravel.
+     * Lưu một story mới vào database.
      */
     public function store(Request $request)
     {
-        // 1. Validate dữ liệu đầu vào
+        // Validate đầy đủ các trường từ form
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'content' => 'required|string',
-            'image' => 'nullable|image|max:2048', // Cho phép ảnh, tối đa 2MB
+            'image' => 'nullable|image|max:2048',
+            'status' => 'required|in:draft,published', // Thêm validation cho status
         ]);
 
-        $imagePath = null; // Mặc định là không có ảnh
-
-        // 2. Kiểm tra và upload file ảnh nếu người dùng có chọn
+        $imagePath = null;
         if ($request->hasFile('image')) {
             $imagePath = $request->file('image')->store('stories', 'public');
-
         }
 
-        // 3. Tạo story mới trong database
-        // Với $fillable đã đúng trong Model, Laravel sẽ lưu tất cả các trường
+        // Tạo story mới với đầy đủ thông tin
         $story = auth()->user()->stories()->create([
             'title' => $validated['title'],
             'content' => $validated['content'],
-            'image' => $imagePath, // Lưu đường dẫn ảnh (hoặc null nếu không có ảnh)
+            'image' => $imagePath,
+            'status' => $validated['status'], // Lưu cả status
         ]);
 
-        // 4. Phát sóng sự kiện real-time (nếu có)
-        broadcast(new StoryCreated($story))->toOthers();
+        // Chỉ phát sóng sự kiện nếu story được publish
+        if ($story->status == 'published') {
+            broadcast(new StoryCreated($story))->toOthers();
+        }
 
-        // 5. Chuyển hướng người dùng về trang chi tiết story vừa tạo
         return redirect()->route('stories.show', $story)
                          ->with('success', 'Story created successfully!');
     }
 
     /**
-     * Hiển thị chi tiết một story và các comment của nó.
+     * Hiển thị chi tiết một story.
      */
     public function show(Story $story)
     {
-        // Tải sẵn các mối quan hệ để tránh lỗi N+1
+        // Ngăn chặn người khác xem story ở trạng thái 'draft'
+        if ($story->status == 'draft' && auth()->id() !== $story->user_id) {
+            abort(404);
+        }
+
         $story->load(['user', 'comments.user']);
         return view('stories.show', compact('story'));
+    }
+
+    /**
+     * Hiển thị form để chỉnh sửa một story đã có.
+     */
+    public function edit(Story $story)
+    {
+        // Kiểm tra quyền (chỉ chủ sở hữu mới được sửa)
+        Gate::authorize('update', $story);
+
+        return view('stories.edit', compact('story'));
+    }
+
+    /**
+     * Cập nhật thông tin story trong database.
+     */
+    public function update(Request $request, Story $story)
+    {
+        // 1. Kiểm tra quyền của người dùng
+        Gate::authorize('update', $story);
+
+        // 2. Validate đầy đủ các trường
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'content' => 'required|string',
+            'image' => 'nullable|image|max:2048',
+            'status' => 'required|in:draft,published', // Thêm validation cho status
+        ]);
+
+        // 3. Xử lý upload ảnh mới (nếu có) và xóa ảnh cũ
+        if ($request->hasFile('image')) {
+            if ($story->image) {
+                Storage::disk('public')->delete($story->image);
+            }
+            // Gán đường dẫn ảnh mới vào mảng validated để update
+            $validated['image'] = $request->file('image')->store('stories', 'public');
+        }
+
+        // 4. Cập nhật story trong database
+        // Laravel sẽ tự động cập nhật các trường có trong mảng $validated
+        $story->update($validated);
+
+        // 5. PHÁT SÓNG SỰ KIỆN UPDATE
+        // Chỉ phát sóng nếu story được publish
+        if ($story->status == 'published') {
+             broadcast(new StoryUpdatedEvent($story))->toOthers();
+        }
+
+        // 6. Chuyển hướng người dùng về trang edit với thông báo thành công
+        return redirect()->route('stories.edit', $story)
+                         ->with('success', 'Story updated successfully!');
+    }
+
+    /**
+     * Xóa một story.
+     */
+    public function destroy(Story $story)
+    {
+        Gate::authorize('delete', $story);
+
+        // Xóa file ảnh liên quan nếu có
+        if ($story->image) {
+            Storage::disk('public')->delete($story->image);
+        }
+
+        $story->delete();
+        
+        // Bạn có thể phát sóng sự kiện xóa ở đây nếu cần
+        // broadcast(new StoryDeleted($story->id))->toOthers();
+
+        return redirect()->route('stories.index')
+                         ->with('success', 'Story deleted successfully.');
     }
 }
