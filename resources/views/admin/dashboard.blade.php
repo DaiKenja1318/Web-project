@@ -1,71 +1,24 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
             {{ __('Admin Dashboard') }}
         </h2>
     </x-slot>
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            @if(session('success'))
-                <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4" role="alert">
-                    <p>{{ session('success') }}</p>
-                </div>
-            @endif
-
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
-                    <h3 class="text-lg font-medium mb-4">Stories Management</h3>
-
-                    <div class="relative overflow-x-auto">
-                        <table class="w-full text-sm text-left rtl:text-right text-gray-500">
-                            <thead class="text-xs text-gray-700 uppercase bg-gray-50">
-                                <tr>
-                                    <th scope="col" class="px-6 py-3">ID</th>
-                                    <th scope="col" class="px-6 py-3">Title</th>
-                                    <th scope="col" class="px-6 py-3">Author</th>
-                                    <th scope="col" class="px-6 py-3">Created At</th>
-                                    <th scope="col" class="px-6 py-3">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse ($stories as $story)
-                                <tr class="bg-white border-b">
-                                    <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
-                                        {{ $story->id }}
-                                    </th>
-                                    <td class="px-6 py-4">
-                                        {{ Str::limit($story->title, 40) }}
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        {{ $story->user->name ?? 'N/A' }}
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        {{ $story->created_at->format('d/m/Y H:i') }}
-                                    </td>
-                                    
-                                    <td class="px-6 py-4 flex items-center gap-2">
-                                        <a href="{{ route('admin.stories.edit', $story) }}" class="inline-block px-3 py-1 bg-blue-500 text-white text-xs font-bold rounded-md hover:bg-blue-600 transition">
-                                            Edit
-                                        </a>
-                                        <form action="{{ route('admin.stories.destroy', $story) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this story?');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="inline-block px-3 py-1 bg-red-500 text-white text-xs font-bold rounded-md hover:bg-red-600 transition">
-                                                Delete
-                                            </button>
-                                        </form>
-                                    </td>
-                                </tr>
-                                @empty
-                                <tr>
-                                    <td colspan="5" class="text-center px-6 py-4">
-                                        No stories found to manage.
-                                    </td>
-                                </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
+            <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-sm sm:rounded-lg">
+                <div class="p-6 text-gray-900 dark:text-gray-100">
+                    <h3 class="text-2xl font-bold mb-4">Welcome, Admin!</h3>
+                    <p class="mb-6">From this dashboard, you can manage the content of the website.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="bg-indigo-50 dark:bg-indigo-900/50 p-6 rounded-lg shadow">
+                            <h4 class="font-semibold text-lg text-indigo-800 dark:text-indigo-200">Manage Stories</h4>
+                            <p class="text-sm text-indigo-600 dark:text-indigo-400 mt-1">View, edit, and delete all user stories.</p>
+                            <a href="{{ route('admin.stories.index') }}" class="inline-block mt-4 bg-indigo-600 text-white font-bold py-2 px-4 rounded hover:bg-indigo-700 transition-colors">
+                                Go to Stories →
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
