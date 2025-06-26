@@ -1,59 +1,76 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+
+// Import các Controller
 use App\Http\Controllers\StoryController;
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
+use App\Http\Controllers\Admin\StoryController as AdminStoryController; // Controller mới cho Admin
 
-// Route chính, không cần auth
+/*
+|--------------------------------------------------------------------------
+| Public Routes (Dành cho tất cả mọi người)
+|--------------------------------------------------------------------------
+*/
+
+// Trang chủ hiển thị danh sách các story
 Route::get('/', [StoryController::class, 'index'])->name('home');
 
-// --- BẮT ĐẦU SỬA LỖI Ở ĐÂY ---
-
-// Route để hiển thị form tạo story. Đặt route này LÊN TRÊN.
-Route::get('/stories/create', [StoryController::class, 'create'])
-    ->middleware('auth')
-    ->name('stories.create');
-
-// Route để xem chi tiết story. Đặt route này XUỐNG DƯỚI.
+// Xem chi tiết một story
+// Đặt dưới các route 'stories/*' khác để tránh xung đột
 Route::get('/stories/{story}', [StoryController::class, 'show'])->name('stories.show');
 
-
-// --- KẾT THÚC SỬA LỖI ---
-
-
-// Nhóm các route cần đăng nhập khác
+/*
+|--------------------------------------------------------------------------
+| Authenticated User Routes (Dành cho người dùng đã đăng nhập)
+|--------------------------------------------------------------------------
+*/
 Route::middleware('auth')->group(function () {
-    // Route để lưu story mới
-    Route::post('/stories', [StoryController::class, 'store'])->name('stories.store');
 
-    // Route để đăng comment
+    // === Story Routes cho người dùng thường ===
+    Route::get('/stories/create', [StoryController::class, 'create'])->name('stories.create');
+    Route::post('/stories', [StoryController::class, 'store'])->name('stories.store');
+    // Nếu người dùng có thể tự sửa/xóa story của mình, thêm 2 dòng này
+    // Route::get('/stories/{story}/edit', [StoryController::class, 'edit'])->name('stories.edit');
+    // Route::put('/stories/{story}', [StoryController::class, 'update'])->name('stories.update');
+    // Route::delete('/stories/{story}', [StoryController::class, 'destroy'])->name('stories.destroy');
+
+    // === Comment Route ===
     Route::post('/stories/{story}/comments', [CommentController::class, 'store'])->name('comments.store');
 
-    // Profile routes
+    // === Profile Routes ===
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-// Nhóm các route chỉ dành cho Admin
+
+/*
+|--------------------------------------------------------------------------
+| Admin Routes (Chỉ dành cho Admin)
+|--------------------------------------------------------------------------
+*/
+// Sử dụng prefix 'admin' cho URL và 'admin.' cho tên route
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
-    // SỬA LẠI THÀNH DÒNG NÀY ĐỂ GỌI CONTROLLER
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-
-     // Route hiển thị form edit
-     Route::get('/stories/{story}/edit', [DashboardController::class, 'editStory'])->name('stories.edit');
     
-     // Route xử lý việc update
-     Route::put('/stories/{story}', [DashboardController::class, 'updateStory'])->name('stories.update');
+    // Admin Dashboard
+    Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
-    Route::delete('/stories/{story}', [DashboardController::class, 'destroyStory'])->name('stories.destroy');
+    // Quản lý Stories cho Admin (Sử dụng Route::resource cho gọn)
+    // Dòng này sẽ tự động tạo ra các route:
+    // - admin.stories.index (GET admin/stories)
+    // - admin.stories.create (GET admin/stories/create)
+    // - admin.stories.store (POST admin/stories)
+    // - admin.stories.show (GET admin/stories/{story})
+    // - admin.stories.edit (GET admin/stories/{story}/edit)
+    // - admin.stories.update (PUT/PATCH admin/stories/{story})
+    // - admin.stories.destroy (DELETE admin/stories/{story})
+    Route::resource('stories', AdminStoryController::class);
+
 });
 
-// Các route xác thực mặc định
-//Route::get('/home', function () {
-    //return redirect()->route('home');
-//})->middleware(['auth', 'verified'])->name('home');
 
+// Auth routes
 require __DIR__.'/auth.php';
