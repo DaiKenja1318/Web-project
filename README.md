@@ -1,7 +1,9 @@
 # Web Project - Blog Application
 
 Bài tập giữa kỳ: Thiết kế Blog Web
+
 Họ và tên: Nguyễn Đình Đức Trung
+
 Mã sinh viên:22010448
 
 ---
