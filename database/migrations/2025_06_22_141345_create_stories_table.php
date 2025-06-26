@@ -18,7 +18,6 @@ return new class extends Migration
         $table->text('content');
         $table->string('image')->nullable();
         $table->timestamps();
-        $table->string('status')->default('draft');
     });
 }
 
