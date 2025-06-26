@@ -84,6 +84,69 @@ Thuật toán thêm stories và comment
 ![image](https://github.com/user-attachments/assets/66b54fd1-6342-4480-bc04-bebaed78a8da)
 
 
+Chi tiết các bước
+1.Kiểm tra đăng nhập:
+    Hệ thống kiểm tra người dùng đã đăng nhập chưa (isLogined?).
+        - Nếu chưa đăng nhập, chuyển hướng đến trang đăng nhập (route to "/login").
+        - Sau khi đăng nhập xong sẽ tùy thuộc vào role của tài khoản thì người dùng sẽ được               dùng chức năng nào.
+
+2. Thao tác
+- Nếu là tài khoản có role user thì có chức năng tạo và comment bài viết, với admin sẽ            có 2 chức năng trên và thêm 1 chức năng là xóa hoặc sửa bài viết.
+- Thêm stories:
+  + lấy dữ liệu từ request.
+  + Kiểm tra xác thực dữ liệu.
+  + tạo stories mới vào database.
+- Comment bài viết:
+  + Truy vấn stories từ user_id và story_id.
+  + Kiểm tra và xác thực dữ liệu.
+  + Cập nhật comment mới trong csdl.
+- Xóa stories với role admin:
+  + Truy vấn stories từ user_id và story_id.
+  + thực hiện xóa stories từ csdl.
+- Chỉnh sửa stories với role admin:
+  + Truy vấn stories từ user_id và story_id.
+  + Kiểm tra dữ liệu sửa đổi hợp lệ.
+  + Cập nhật stories với dữ liệu đã xác thực.
+ 
+Giao diện thực tế
+Giao diện màn hình chính
+![image](https://github.com/user-attachments/assets/85acaced-edfd-4440-92d6-f1a9c18d41cf)
+
+![image](https://github.com/user-attachments/assets/a7668759-d09f-4c85-bccc-6d8174fea955)
+
+Giao diện admin panel
+![image](https://github.com/user-attachments/assets/3c65c246-d18f-4b8f-b552-f3a9542cca75)
+
+Giao diện tạo stories
+![image](https://github.com/user-attachments/assets/610154dd-0f6e-49cb-9517-5511b42cf04b)
+
+Giao diện comment
+![image](https://github.com/user-attachments/assets/58dc6833-3d2c-48c9-b942-f38b5f32e860)
+
+Giao diện sửa bài viết
+![image](https://github.com/user-attachments/assets/44783b3b-35f2-4785-84a8-b9d4f6871de8)
+
+
+Code minh họa
+Link Repo
+https://github.com/DaiKenja1318/Web-project.github.io
+
+Link Deploy
+https://blog-app-gk.laravel.cloud/
+
+
+
+
+
+
+
+
+
+
+
+   
+    
+        
 
 
 
