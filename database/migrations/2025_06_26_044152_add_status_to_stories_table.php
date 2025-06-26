@@ -12,8 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('stories', function (Blueprint $table) {
-            // Thêm cột 'status' vào bảng 'stories' đã tồn tại
-            $table->string('status')->default('draft')->after('image');
+            //
         });
     }
 
@@ -23,8 +22,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('stories', function (Blueprint $table) {
-            // Định nghĩa cách để xóa cột này nếu cần rollback
-            $table->dropColumn('status');
+            //
         });
     }
 };
