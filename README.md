@@ -148,7 +148,9 @@ Dự án sử dụng cơ sở dữ liệu quan hệ gồm **3 bảng chính** v�
 
 ### 🔹 Giao diện admin panel
 
-![image](https://github.com/user-attachments/assets/3c65c246-d18f-4b8f-b552-f3a9542cca75)
+![image](https://github.com/user-attachments/assets/fec0d6ad-4631-49a8-80a3-525d987fec27)
+![image](https://github.com/user-attachments/assets/3ceadac2-cb8e-42fc-a7b6-4d0fd27c39e7)
+
 
 ### 🔹 Giao diện tạo stories
 
@@ -160,7 +162,8 @@ Dự án sử dụng cơ sở dữ liệu quan hệ gồm **3 bảng chính** v�
 
 ### 🔹 Giao diện sửa bài viết
 
-![image](https://github.com/user-attachments/assets/44783b3b-35f2-4785-84a8-b9d4f6871de8)
+![image](https://github.com/user-attachments/assets/df27d728-eeb6-49da-845e-d9728ff0e0fa)
+
 
 ---
 
