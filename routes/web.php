@@ -20,7 +20,6 @@ Route::get('/', [StoryController::class, 'index'])->name('home');
 
 // Xem chi tiết một story
 Route::get('/stories/{story}', [StoryController::class, 'show'])->name('stories.show');
-Route::get('/stories/create', [StoryController::class, 'create'])->name('stories.create');
 
 
 /*
@@ -29,6 +28,9 @@ Route::get('/stories/create', [StoryController::class, 'create'])->name('stories
 |--------------------------------------------------------------------------
 */
 Route::middleware('auth')->group(function () {
+
+    // === Story Routes cho người dùng thường ===
+    Route::get('/stories/create', [StoryController::class, 'create'])->name('stories.create');
     Route::post('/stories', [StoryController::class, 'store'])->name('stories.store');
 
     // === Comment Route ===
