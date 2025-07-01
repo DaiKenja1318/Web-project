@@ -24,9 +24,7 @@ class StoryController extends Controller
      */
     public function create()
     {
-        return view('admin.stories.edit', [
-            'story' => new Story()
-        ]);
+        return view('stories.create');
     }
 
     /**
